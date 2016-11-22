@@ -48,7 +48,5 @@ public class Customer {
 	public static void main(String[] args) throws IOException {
 		Customer app = new Customer();
 		app.test();
-		System.out.println("Testing github commit");
-
 	}
 }
