@@ -2,6 +2,8 @@ package com.psqa.framework;
 
 import java.io.IOException;
 import java.net.URL;
+
+import com.psqa.framework.functions;
 import org.openqa.selenium.winium.DesktopOptions;
 import org.openqa.selenium.winium.WiniumDriver;
 
@@ -12,7 +14,7 @@ import org.openqa.selenium.winium.WiniumDriver;
  */
 public class Customer {
 	
-	String ANSWER_BUTTON = "ButtonAnswer";
+	private String ANSWER_BUTTON = "ButtonAnswer";
 	
 	
 	 //@Test
@@ -48,5 +50,6 @@ public class Customer {
 	public static void main(String[] args) throws IOException {
 		Customer app = new Customer();
 		app.test();
+		System.out.println("work");
 	}
 }
