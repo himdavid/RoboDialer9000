@@ -2,6 +2,7 @@ package com.psqa.framework;
 
 import java.io.IOException;
 
+import com.jcraft.jsch.Session;
 import org.json.simple.parser.ParseException;
 import org.openqa.selenium.winium.WiniumDriver;
 
@@ -80,20 +81,17 @@ public class Customer {
 	  }
 	 }
 
-	 public void sandBox(){
-		 Functions functions = new Functions();
-		 //String sshCommand = "curl http://sst-chiweb01:8080/api/rest/records/007cf20a-a0de-4224-b937-7330f9030d5f | python -m json.tool";
-		 String jsonText = functions.SSH("svc-app03.vrli.net",22,"curl http://sst-chiweb01:8080/api/rest/records/007cf20a-a0de-4224-b937-7330f9030d5f | python -m json.tool");
+	 public void sandBox() throws ParseException {
+		 SSHFactory ssh = new SSHFactory();
+		 JSONFactory json = new JSONFactory();
 
-		 try {
-			 functions.parseJSON(jsonText);
-		 } catch (ParseException e) {
-			 e.printStackTrace();
-		 }
+		 Session sshSession = ssh.connectToSSH("svc-app03.vrli.net", 22);
+		 String jsonText = ssh.sendCommand(sshSession,"curl http://sst-chiweb01:8080/api/rest/records/007cf20a-a0de-4224-b937-7330f9030d5f | python -m json.tool");
 
+		 json.parseJSON(jsonText);
 	 }
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, ParseException {
 		Customer app = new Customer();
 		//app.test();
 		app.sandBox();

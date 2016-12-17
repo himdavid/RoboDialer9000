@@ -3,8 +3,12 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.*;
+import java.util.Iterator;
+import java.util.Set;
 
+import com.google.gson.JsonObject;
 import com.jcraft.jsch.*;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -174,57 +178,5 @@ public class Functions {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
-	}
-
-	public String SSH(String host, int port, String command) {
-
-		StringBuilder outputBuffer = new StringBuilder();
-		String terminalOutput = null;
-
-		try{
-			JSch jsch=new JSch();
-			Session session=jsch.getSession("dhim", host, port);
-
-			java.util.Properties config = new java.util.Properties();
-			config.put("StrictHostKeyChecking", "no");
-			session.setConfig(config);
-
-			//String passwd = JOptionPane.showInputDialog("Enter password");
-			session.setPassword("JwMGwTMS5");
-			session.connect(30000);   // making a connection with timeout.
-			Channel channel = session.openChannel("exec");
-			((ChannelExec)channel).setCommand(command);
-			InputStream commandOutput = channel.getInputStream();
-			channel.connect();
-
-			int readByte = commandOutput.read();
-			while(readByte != 0xffffffff)
-			{
-				outputBuffer.append((char)readByte);
-				readByte = commandOutput.read();
-			}
-			channel.disconnect();
-			session.disconnect();
-			terminalOutput = outputBuffer.toString();
-			System.out.println(terminalOutput);
-		}
-		catch(Exception e){
-			System.out.println(e);
-		}
-		return terminalOutput;
-	}
-
-	public String parseJSON(String json) throws ParseException {
-		String jsonString = null;
-
-		JSONParser jsonParser = new JSONParser();
-
-		JSONObject jsonObject = (JSONObject) jsonParser.parse(json);
-
-		String trackingID = (String) jsonObject.get("trackingID");
-
-		System.out.println("The tracking_id is: " + trackingID);
-
-		return jsonString;
 	}
 }
