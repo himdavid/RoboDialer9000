@@ -1,11 +1,12 @@
 package com.psqa.framework;
 
+import com.google.common.collect.Multimap;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * Created by david_him on 12/16/2016.
@@ -57,30 +58,80 @@ public class JSONFactory {
         String lastName = (String) jsonObject.get("lastName");
         Long loadDate = (Long) jsonObject.get("loadDate");
         String locateStatus = (String) jsonObject.get("locateStatus");
+        String personID = (String) jsonObject.get("personID");
+        String productID = (String) jsonObject.get("productID");
+        Long resultDate = (Long) jsonObject.get("resultDate");
+        //String accountEntity = (String) jsonObject.get("rootElement");
 
-        JSONArray medias = (JSONArray) jsonObject.get("medias");
-
-        for(int i=0; i<medias.size(); i++) {
-            System.out.println(medias.get(i));
-        }
-
-        Iterator iter = medias.iterator();
-
-        while(iter.hasNext()){
-            JSONObject innerObj = (JSONObject) iter.next();
-            String mediaId = (String) innerObj.get("mediaId");
-            String mediaAddress = (String)innerObj.get("mediaAddress");
-            String status = (String)innerObj.get("status");
-            Long seqNo = (Long)innerObj.get("seqNo");
-            String reasonsInvalid = (String)innerObj.get("reasonsInvalid");
-
-            System.out.println(mediaId + "," + mediaAddress + "," + status + "," + seqNo + "," + reasonsInvalid);
-        }
-
-        //System.out.println(medias);
-
-        System.out.println("The tracking_id is: " + trackingID);
+        String medias[] = {"mediaId", "mediaAddress", "status", "seqNo", "reasonsInvalid", "secondaryStateCode"};
+        ArrayList<ArrayList<String>> JSONValues = getJSONArray(jsonObject, "medias", medias);
+        printArray(JSONValues);
 
         return jsonString;
+    }
+
+    public static HashMap<String,String> parseJSONMap(String JSONString) throws ParseException {
+
+        HashMap<String, String> map = new HashMap<>();
+        JSONParser JSONParser = new JSONParser();
+
+        JSONObject jObject = (JSONObject) JSONParser.parse(JSONString);
+
+        Iterator iter = jObject.keySet().iterator();
+        while(iter.hasNext()){
+            String key = iter.next().toString();
+            String val;
+            if(jObject.get(key) == null) {
+                val = "null";
+            } else {
+                val = jObject.get(key).toString();
+            }
+            map.put(key, val);
+        }
+        return map;
+    }
+
+    public ArrayList<ArrayList<String>> getJSONArray(JSONObject jsonObject, String array, String[] arrayValues) {
+
+
+        JSONArray JSONChildObject = (JSONArray) jsonObject.get(array);
+        ArrayList<String> JSONSubList = new ArrayList<>();
+        ArrayList<ArrayList<String>> JSONMainList = new ArrayList<>();
+
+        for(int i = 0; i < JSONChildObject.size(); i++) {
+            JSONObject JSONNest = (JSONObject) JSONChildObject.get(i);
+            for(int a = 0; a < arrayValues.length; a++) {
+                String JSONValue;
+                if(JSONNest.get(arrayValues[a]) == null) {
+                    JSONValue = "null";
+                } else {
+                    JSONValue =  JSONNest.get(arrayValues[a]).toString();
+                }
+                JSONSubList.add(JSONValue);
+            }
+            JSONMainList.add(JSONSubList);
+            JSONSubList = new ArrayList<>();
+        }
+        return JSONMainList;
+    }
+
+
+    public void printArray(ArrayList<ArrayList<String>> list) {
+
+        for(int i = 0; i < list.size(); i++) {
+            ArrayList<String> mainObject = list.get(i);
+            for(int a = 0; a < mainObject.size(); a++) {
+                System.out.println("Object " + i + ": " + mainObject.get(a));
+            }
+        }
+    }
+
+    public void printJSONMap(HashMap<String, String> map) {
+        for(String json : map.keySet()) {
+            String key = json.toString();
+            String value = map.get(key).toString();
+
+            System.out.println("Key: " + key +"\n" + "Value: " + value);
+        }
     }
 }
