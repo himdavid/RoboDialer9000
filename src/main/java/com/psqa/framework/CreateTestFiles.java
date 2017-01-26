@@ -1,404 +1,303 @@
 package com.psqa.framework;
 
-import java.io.*;
-import java.util.*;
+import com.psqa.framework.ConfigData;
+import com.psqa.framework.Time;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map.Entry;
 
-/**
- * This class handles the process of accepting a baseline file and creating individual
- * test files that can be used to generate a phone call. 
- * @author David Him
- *
- */
 public class CreateTestFiles {
-	
-	private BufferedReader br;
-	private String delimiter;
+    private BufferedReader br;
+    private String delimiter;
 
-	/**
-	 * Constructor
-	 */
-	public CreateTestFiles(){
-		
-	}
+    public CreateTestFiles() {
+    }
 
-	/**
-	 * Given a flat file with a header and single row of data, fields and values will be separated
-	 * based on the specified delimiter. A LinkedHashMap will be returned with the fields as the key.
-	 * @param filePath, the absolute file path to the flat file. (ie C:/user/david_him/project/test_file.dat)
-	 * @param delimiter, the delimiter within the file. (ie: |,"")
-	 * @return map, the LinkedHashMap.
-	 * @throws IOException
-	 */
-	public HashMap<String, String> parseFieldsDelimited(String filePath, String delimiter) throws IOException{
+    public HashMap<String, String> parseFieldsDelimited(String filePath, String delimiter) throws IOException {
+        this.delimiter = delimiter;
+        this.br = new BufferedReader(new FileReader(filePath));
+        String[] column = null;
+        String[] value = null;
+        int line = 0;
 
-		this.delimiter = delimiter;
-		
-		br = new BufferedReader(new FileReader(filePath));
-		String parsedFields;
-		String[] column = null;
-		String[] value = null;
-		int line = 0;
-		LinkedHashMap<String, String> map = new LinkedHashMap<String,String>();
+        String parsedFields;
+        LinkedHashMap map;
+        for(map = new LinkedHashMap(); (parsedFields = this.br.readLine()) != null; ++line) {
+            if(line == 0) {
+                column = parsedFields.split(delimiter);
+            } else if(line == 1) {
+                value = parsedFields.split(delimiter);
+            }
+        }
 
-		while((parsedFields = br.readLine()) != null) {
+        for(int i = 0; i <= column.length - 1; ++i) {
+            map.put(column[i], value[i]);
+        }
 
-			if(line == 0) {
-				column = parsedFields.split(delimiter);
-			}
-			else if(line == 1) {
-				value = parsedFields.split(delimiter);
-			}
-			line++;
-		}
-		for(int i = 0; i <= column.length - 1; i++) {
-			map.put(column[i], value[i]);
-		}
-		return map;
-	}
-	
-	/**
-	 * Parse a fixed width baseline and configuration file for processing.
-	 * @param baseLineFile
-	 * @param configFile
-	 * @return
-	 * @throws IOException
-	 */
-	public HashMap<String, ConfigData> parseFieldsFixedWidth(String baseLineFile, String configFile, boolean header, boolean footer) throws IOException{
-		
-		BufferedReader br1 = new BufferedReader(new FileReader(baseLineFile));
-		BufferedReader br2 = new BufferedReader(new FileReader(configFile));
-		
-		String parsedBaseLineFile;
-		String parsedBaseLineFileValue = null;
-		String parsedConfigFile;
-		String configFieldName;
-		String[] configFields;
-		int configBeginIndex;
-		int configEndIndex;
-		String baseLineValue;
-		LinkedHashMap<String, ConfigData> map = new LinkedHashMap<String,ConfigData>();
+        return map;
+    }
 
-		int countLineBaseLineFile = 0;
-		while((parsedBaseLineFile = br1.readLine()) != null){
-			if(header == true && footer == true && countLineBaseLineFile == 1){
-				parsedBaseLineFileValue = parsedBaseLineFile;
-			}
-			if(header == true && footer == false && countLineBaseLineFile == 1){
-				parsedBaseLineFileValue = parsedBaseLineFile;
-			}
-			if(header == false && footer == true && countLineBaseLineFile == 0){
-				parsedBaseLineFileValue = parsedBaseLineFile;
-			}
-			if(header == false && footer == false && countLineBaseLineFile == 0){
-				parsedBaseLineFileValue = parsedBaseLineFile;
-			}
-			countLineBaseLineFile++;
-		}
-		
-		while((parsedConfigFile = br2.readLine()) != null){
-			
-			configFields = parsedConfigFile.split("\\t");
-			
-			configFieldName = configFields[0];
-			configBeginIndex = Integer.parseInt(configFields[1]);
-			configEndIndex = Integer.parseInt(configFields[2]);
-			baseLineValue = parsedBaseLineFileValue.substring(configBeginIndex - 1, configEndIndex);
-			ConfigData cd = new ConfigData(configFieldName, configBeginIndex, configEndIndex, baseLineValue);
+    public HashMap<String, ConfigData> parseFieldsFixedWidth(String baseLineFile, String configFile, boolean header, boolean footer) throws IOException {
+        BufferedReader br1 = new BufferedReader(new FileReader(baseLineFile));
+        BufferedReader br2 = new BufferedReader(new FileReader(configFile));
+        String parsedBaseLineFileValue = null;
+        LinkedHashMap map = new LinkedHashMap();
 
-			map.put(configFieldName, cd);
-		}
-		br1.close();
-		br2.close();
-		return map;
-	}
+        String parsedBaseLineFile;
+        for(int countLineBaseLineFile = 0; (parsedBaseLineFile = br1.readLine()) != null; ++countLineBaseLineFile) {
+            if(header && footer && countLineBaseLineFile == 1) {
+                parsedBaseLineFileValue = parsedBaseLineFile;
+            }
 
-	/**
-	 * Given a LinkedHashMap and a List of test cases, if the key in the LinkedHashMap matches the field name
-	 * of the test case, the value in the LinkedHashMap will be updated. The LinkedHashMap will be returned.
-	 * @param map, the LinkedHashMap<String, String> from the parsed flat file
-	 * @param testCase, the List<String> containing unparsed test cases
-	 * @return map, an updated LinkedHashMap with the updated test data
-	 * @throws IOException
-	 */
-	public HashMap<String, ConfigData>updateFieldValueFixedWidth(HashMap<String, ConfigData> map, List<String> testCase) throws IOException {
+            if(header && !footer && countLineBaseLineFile == 1) {
+                parsedBaseLineFileValue = parsedBaseLineFile;
+            }
 
-		for(int i = 0; i < testCase.size(); i++){
-			String field = testCase.get(i).split("=")[0];
-			String value = testCase.get(i).split("=")[1].replaceAll("\"", "");
-			System.out.println("Found field \n" + " Field Name:" + value + "\n Old Value:" + map.get(field).getValue());
-			ConfigData cd = map.get(field);
-			int beginIndex = cd.getBeginIndex();
-			int endIndex = cd.getEndIndex();
-			
-			if(value.length() != endIndex - beginIndex - 1){
-				System.out.println("Not enough characters in test case");
-			} else {
-				
-			}
-			cd.setValue(value);
-			map.put(field, cd);
-			System.out.println(" New Value:" + map.get(field).getValue());
-			}
-		return map;
-	}
-	
-	/**
-	 * Given a LinkedHashMap and a List of test cases, if the key in the LinkedHashMap matches the field name
-	 * of the test case, the value in the LinkedHashMap will be updated. The LinkedHashMap will be returned.
-	 * @param map, the LinkedHashMap<String, String> from the parsed flat file
-	 * @param testCase, the List<String> containing unparsed test cases
-	 * @return map, an updated LinkedHashMap with the updated test data
-	 * @throws IOException
-	 */
-	public HashMap<String, String>updateFieldValue(HashMap<String, String> map, List<String> testCase) throws IOException {
+            if(!header && footer && countLineBaseLineFile == 0) {
+                parsedBaseLineFileValue = parsedBaseLineFile;
+            }
 
-		for(int i = 0; i < testCase.size(); i++){
-			String field = testCase.get(i).split("=")[0];
-			String value = testCase.get(i).split("=")[1].replaceAll("\"", "");
-			System.out.println("Found field \n" + " Field Name:" + field + "\n Old Value:" + map.get(field));
-			map.put(field, value);
-			System.out.println(" New Value:" + map.get(field));
-			}
-		return map;
-	}
-	
-	/**
-	 * Generate individual test files using a config file that describes each field and its beginning and ending index. 
-	 * @param testCaseFilePath, the path to the test case file
-	 * @param testDataFilePath, the path to the test data file
-	 * @param configFilePath, the path to the configuration file
-	 * @param fileNameFormat, the expected file name
-	 * @param header, true if the test data file contains a header
-	 * @param footer, true if the test data file contains a footer
-	 * @return testFile, the File object representing the final output file
-	 * @throws IOException
-	 */
-	public File createOutputFixedWidth(String testCaseFilePath, String testDataFilePath, String configFilePath, String fileNameFormat,
-			boolean header, boolean footer) throws IOException{
+            if(!header && !footer && countLineBaseLineFile == 0) {
+                parsedBaseLineFileValue = parsedBaseLineFile;
+            }
+        }
 
-		List<String> testCasesLists = new ArrayList<String>();
-		File testFile = null;
+        String parsedConfigFile;
+        while((parsedConfigFile = br2.readLine()) != null) {
+            String[] configFields = parsedConfigFile.split("\\t");
+            String configFieldName = configFields[0];
+            int configBeginIndex = Integer.parseInt(configFields[1]);
+            int configEndIndex = Integer.parseInt(configFields[2]);
+            String baseLineValue = parsedBaseLineFileValue.substring(configBeginIndex - 1, configEndIndex);
+            ConfigData cd = new ConfigData(configFieldName, configBeginIndex, configEndIndex, baseLineValue);
+            map.put(configFieldName, cd);
+        }
 
-		BufferedReader br = new BufferedReader(new FileReader(testCaseFilePath));
-		String content = null;
-		String filePath = testCaseFilePath.substring(0, testCaseFilePath.lastIndexOf("/")) + "/";
+        br1.close();
+        br2.close();
+        return map;
+    }
 
-		while((content = br.readLine()) != null){
-			if(content.contains(",")){
-				testCasesLists = new ArrayList<String>(Arrays.asList(content.split(",")));
-			} else {
-				testCasesLists.add(content);
-			}
-			
-			HashMap<String, ConfigData> map = parseFieldsFixedWidth(testDataFilePath,configFilePath, header, footer);
-			HashMap<String, ConfigData> updatedMap = updateFieldValueFixedWidth(map, testCasesLists);
-			
-			//Set the file name, trim if the total path is > 260 characters.
-			String fileName = filePath + fileNameFormat.replace("[FieldName]", content.replace("\"", ""));
-			fileName = fileName.substring(0, Math.min(fileName.length(), 260));
-			testFile = new File(fileName);
+    public HashMap<String, ConfigData> updateFieldValueFixedWidth(HashMap<String, ConfigData> map, List<String> testCase) throws IOException {
+        for(int i = 0; i < testCase.size(); ++i) {
+            String field = ((String)testCase.get(i)).split("=")[0];
+            String value = ((String)testCase.get(i)).split("=")[1].replaceAll("\"", "");
+            System.out.println("Found field \n Field Name:" + value + "\n Old Value:" + ((ConfigData)map.get(field)).getValue());
+            ConfigData cd = (ConfigData)map.get(field);
+            int beginIndex = cd.getBeginIndex();
+            int endIndex = cd.getEndIndex();
+            if(value.length() != endIndex - beginIndex - 1) {
+                System.out.println("Not enough characters in test case");
+            }
 
-			File tempFileValue = new File(filePath + "tempValue.dat");
-			FileOutputStream fopsFinalFile = new FileOutputStream(testFile);
-			FileOutputStream fopsValue = new FileOutputStream(tempFileValue);
-			System.out.println(testFile.getAbsolutePath());
-			System.out.println("file length is: " + testFile.getAbsolutePath().length());
-			
-			for(Map.Entry<String, ConfigData> entry: updatedMap.entrySet()){
-				String field = entry.getKey();
-				String value = entry.getValue().getValue();
+            cd.setValue(value);
+            map.put(field, cd);
+            System.out.println(" New Value:" + ((ConfigData)map.get(field)).getValue());
+        }
 
-				fopsValue.write(value.getBytes());
-				System.out.println("Field:" + field + " \n Value:" + value);
-			}
-			
-			if(header == true) {
-				File tempFileHeader = new File(filePath + "tempHeader.dat");
-				FileOutputStream fopsHeader = new FileOutputStream(tempFileHeader);
-				fopsHeader.write(getHeader(testDataFilePath).getBytes());
-				BufferedReader brHeader = new BufferedReader(new FileReader(tempFileHeader));
-				String copyHeader = brHeader.readLine() + "\n";
-				fopsFinalFile.write(copyHeader.getBytes());
-				fopsHeader.close();
-				brHeader.close();
-				tempFileHeader.delete();
-			}
-			
-			fopsValue.close();
-			BufferedReader brValue = new BufferedReader(new FileReader(tempFileValue));
-			String copyValue = brValue.readLine();
-			fopsFinalFile.write(copyValue.getBytes());
-			brValue.close();
-			tempFileValue.delete();
+        return map;
+    }
 
-			if(footer == true) {
-				File tempFileFooter = new File(filePath + "tempFooter.dat");
-				FileOutputStream fopsFooter = new FileOutputStream(tempFileFooter);
-				fopsFooter.write(getFooter(testDataFilePath, header).getBytes());
-				BufferedReader brFooter = new BufferedReader(new FileReader(tempFileFooter));
-				String copyFooter = "\n" + brFooter.readLine();
-				fopsFinalFile.write(copyFooter.getBytes());
-				fopsFooter.close();
-				brFooter.close();
-				tempFileFooter.delete();
-			}
-			testCasesLists.clear();
-			fopsFinalFile.close();
-		}
-		br.close();
-		return testFile;
-	}
+    public HashMap<String, String> updateFieldValue(HashMap<String, String> map, List<String> testCase) throws IOException {
+        for(int i = 0; i < testCase.size(); ++i) {
+            String field = ((String)testCase.get(i)).split("=")[0];
+            String value = ((String)testCase.get(i)).split("=")[1].replaceAll("\"", "");
+            System.out.println("Found field \n Field Name:" + field + "\n Old Value:" + (String)map.get(field));
+            map.put(field, value);
+            System.out.println(" New Value:" + (String)map.get(field));
+        }
 
-	/**
-	 * Given the path of the baseline file(flat file), the updated LinkedHashMap, delimiter, and a file name format,
-	 * generate individual test files.
-	 * @param testCaseFilePath, the absolute path to the test cases file.
-	 * @param testDataFilePath, the absolute path to the test data file.
-	 * @param fileNameFormat, the expected file name format.
-	 * @throws IOException
-	 */
-	public ArrayList<String> createOutput(String testCaseFilePath, String testDataFilePath, String delimiter, String fileNameFormat, boolean multipleFilesFlag) throws IOException{
+        return map;
+    }
 
-		List<String> testCasesLists = null;
-		File testFile = null;
-		ArrayList<String> testFileList = new ArrayList<>();
+    public File createOutputFixedWidth(String testCaseFilePath, String testDataFilePath, String configFilePath, String fileNameFormat, boolean header, boolean footer) throws IOException {
+        ArrayList testCasesLists = new ArrayList();
+        File testFile = null;
+        BufferedReader br = new BufferedReader(new FileReader(testCaseFilePath));
+        String content = null;
+        String filePath = testCaseFilePath.substring(0, testCaseFilePath.lastIndexOf("/")) + "/";
 
-		BufferedReader br = new BufferedReader(new FileReader(testCaseFilePath));
-		String content;
-		String filePath = testCaseFilePath.substring(0, testCaseFilePath.lastIndexOf("/")) + "/";
-		//File testFile = new File(filePath + fileNameFormat.replace("[FieldName]", "MultipleRecords"));
+        while((content = br.readLine()) != null) {
+            if(content.contains(",")) {
+                testCasesLists = new ArrayList(Arrays.asList(content.split(",")));
+            } else {
+                testCasesLists.add(content);
+            }
 
-		while((content = br.readLine()) != null){
-			if(content.contains(",")){
-				testCasesLists = new ArrayList<String>(Arrays.asList(content.split(",")));
-			} else {
-				testCasesLists.add(content);
-			}
-			HashMap<String, String> map = parseFieldsDelimited(testDataFilePath, delimiter);
-			HashMap<String, String> updatedMap = updateFieldValue(map, testCasesLists);
-			
-			//Set the file name, trim if the total path is > 260 characters.
-			String fileName = filePath + fileNameFormat.replace("[FieldName]", content.replace("\"", ""));
-			fileName = fileName.substring(0, Math.min(fileName.length(), 260));
+            HashMap map = this.parseFieldsFixedWidth(testDataFilePath, configFilePath, header, footer);
+            HashMap updatedMap = this.updateFieldValueFixedWidth(map, testCasesLists);
+            String fileName = filePath + fileNameFormat.replace("[FieldName]", content.replace("\"", ""));
+            fileName = fileName.substring(0, Math.min(fileName.length(), 260));
+            testFile = new File(fileName);
+            File tempFileValue = new File(filePath + "tempValue.dat");
+            FileOutputStream fopsFinalFile = new FileOutputStream(testFile);
+            FileOutputStream fopsValue = new FileOutputStream(tempFileValue);
+            System.out.println(testFile.getAbsolutePath());
+            System.out.println("file length is: " + testFile.getAbsolutePath().length());
+            Iterator brValue = updatedMap.entrySet().iterator();
 
-			testFileList.add(fileName);
+            String fopsFooter;
+            while(brValue.hasNext()) {
+                Entry copyValue = (Entry)brValue.next();
+                String tempFileFooter = (String)copyValue.getKey();
+                fopsFooter = ((ConfigData)copyValue.getValue()).getValue();
+                fopsValue.write(fopsFooter.getBytes());
+                System.out.println("Field:" + tempFileFooter + " \n Value:" + fopsFooter);
+            }
 
-			if(multipleFilesFlag == true) {
-				testFile = new File(fileName);
-			} else {
-				testFile = new File(filePath + fileNameFormat.replace("[FieldName]", "MultipleRecords"));
-			}
+            if(header) {
+                File brValue1 = new File(filePath + "tempHeader.dat");
+                FileOutputStream copyValue1 = new FileOutputStream(brValue1);
+                copyValue1.write(this.getHeader(testDataFilePath).getBytes());
+                BufferedReader tempFileFooter1 = new BufferedReader(new FileReader(brValue1));
+                fopsFooter = tempFileFooter1.readLine() + "\n";
+                fopsFinalFile.write(fopsFooter.getBytes());
+                copyValue1.close();
+                tempFileFooter1.close();
+                brValue1.delete();
+            }
 
-			File tempFile = new File("temp.dat");
-			FileOutputStream fops1 = new FileOutputStream(testFile);
-			FileOutputStream fops2 = new FileOutputStream(tempFile);
-			System.out.println(testFile.getAbsolutePath());
-			System.out.println("file length is: " + testFile.getAbsolutePath().length());
+            fopsValue.close();
+            BufferedReader brValue2 = new BufferedReader(new FileReader(tempFileValue));
+            String copyValue2 = brValue2.readLine();
+            fopsFinalFile.write(copyValue2.getBytes());
+            brValue2.close();
+            tempFileValue.delete();
+            if(footer) {
+                File tempFileFooter2 = new File(filePath + "tempFooter.dat");
+                FileOutputStream fopsFooter1 = new FileOutputStream(tempFileFooter2);
+                fopsFooter1.write(this.getFooter(testDataFilePath, header).getBytes());
+                BufferedReader brFooter = new BufferedReader(new FileReader(tempFileFooter2));
+                String copyFooter = "\n" + brFooter.readLine();
+                fopsFinalFile.write(copyFooter.getBytes());
+                fopsFooter1.close();
+                brFooter.close();
+                tempFileFooter2.delete();
+            }
 
-			int setSize = updatedMap.entrySet().size();
-			int count = 1;
-			for(Map.Entry<String, String> entry: updatedMap.entrySet()){
-				String field = entry.getKey();
-				String value = entry.getValue();
-				fops1.write(field.getBytes());
-				fops2.write(value.getBytes());
-				if(count < setSize) {
-					fops1.write(delimiter.getBytes());
-					fops2.write(delimiter.getBytes());
-				}
-				count++;
-			}
-			testCasesLists.clear();
-			BufferedReader br2 = new BufferedReader(new FileReader(tempFile));
-			String copyString = "\n" + br2.readLine();
-			fops1.write(copyString.getBytes());
-			fops1.close();
-			fops2.close();
-			br2.close();
-			tempFile.delete();
-		}
-		br.close();
-		return testFileList;
-	}
+            testCasesLists.clear();
+            fopsFinalFile.close();
+        }
 
-	/**
-	 * Get the file header
-	 * @param baseLineFile, path to the baseline file
-	 * @return header, the header string
-	 * @throws IOException
-	 */
-	public String getHeader(String baseLineFile) throws IOException{
-		
-		BufferedReader br = new BufferedReader(new FileReader(baseLineFile));
-		String parsedBaseLine;
-		String header = null;
-		
-		int countLine = 0;
-		while((parsedBaseLine = br.readLine()) != null){
+        br.close();
+        return testFile;
+    }
 
-			if(countLine == 0){
-				header = parsedBaseLine;
-			}
-			countLine++;
-		}
-		br.close();
-		return header;
-	}
-	
-	/**
-	 * Get the file footer
-	 * @param baseLineFile, path to the baseline file
-	 * @param header, indicate if the file contains a header
-	 * @return header, the footer string
-	 * @throws IOException
-	 */
-	public String getFooter(String baseLineFile, boolean header) throws IOException{
-		
-		BufferedReader br = new BufferedReader(new FileReader(baseLineFile));
-		String parsedBaseLine;
-		String footer = null;
-		
-		int countLine = 0;
-		while((parsedBaseLine = br.readLine()) != null){
+    public ArrayList<String> createOutput(String testCaseFilePath, String testDataFilePath, String delimiter, String fileNameFormat, boolean multipleFilesFlag) throws IOException {
+        ArrayList testCasesLists = null;
+        File testFile = null;
+        ArrayList testFileList = new ArrayList();
+        BufferedReader br = new BufferedReader(new FileReader(testCaseFilePath));
+        String filePath = testCaseFilePath.substring(0, testCaseFilePath.lastIndexOf("/")) + "/";
 
-			if(countLine == 2 && header == true){
-				footer = parsedBaseLine;
-			}
-			if(countLine == 1 && header == false){
-				footer = parsedBaseLine;
-			}
-			countLine++;
-		}
-		br.close();
-		
-		return footer;
-	}
-	
-	/**
-	 * Set the delimiter character
-	 * @param delimiter, the delimiter
-	 */
-	public void setDelimiter(String delimiter){
-		this.delimiter = delimiter;
-	}
+        String content;
+        while((content = br.readLine()) != null) {
+            if(content.contains(",")) {
+                testCasesLists = new ArrayList(Arrays.asList(content.split(",")));
+            } else {
+                testCasesLists.add(content);
+            }
 
-	/**
-	 * Get the delimiter character
-	 * @return delimiter, the delimiter
-	 */
-	public String getDelimiter(){
-		return delimiter;
-	}
+            HashMap map = this.parseFieldsDelimited(testDataFilePath, delimiter);
+            HashMap updatedMap = this.updateFieldValue(map, testCasesLists);
+            String fileName = filePath + fileNameFormat.replace("[FieldName]", content.replace("\"", ""));
+            fileName = fileName.substring(0, Math.min(fileName.length(), 260));
+            testFileList.add(fileName);
+            if(multipleFilesFlag) {
+                testFile = new File(fileName);
+            } else {
+                testFile = new File(filePath + fileNameFormat.replace("[FieldName]", "MultipleRecords"));
+            }
 
+            File tempFile = new File("temp.dat");
+            FileOutputStream fops1 = new FileOutputStream(testFile);
+            FileOutputStream fops2 = new FileOutputStream(tempFile);
+            System.out.println(testFile.getAbsolutePath());
+            System.out.println("file length is: " + testFile.getAbsolutePath().length());
+            int setSize = updatedMap.entrySet().size();
+            int count = 1;
 
-	public static void main(String args[]) throws IOException{
-		CreateTestFiles ctf = new CreateTestFiles();
-		Time time = new Time();
-		String todaysDate = time.getTodaysDate("yyyyMMdd");
-		/** ctf.createOutput("C:/Users/david_him/Documents/Projects/ADS/17451/testfiles/testCase.txt",
-				"C:/Users/david_him/Documents/Projects/ADS/17451/testfiles/PROD.CM.DIALER.AUTO.NUANCE.20161026",
-				",", "PROD.CM.DIALER.AUTO.NUANCE."+ todaysDate + "[FieldName]", true); **/
-		//ctf.createOutputFixedWidth("C:/Users/david_him/Documents/Projects/ADS/testCase.txt", "C:/Users/david_him/Documents/Projects/ADS/PROD.CM.DIALER.AUTO.NUANCE_header_trailer", "C:/Users/david_him/Documents/Projects/ADS/config.txt", "nuance.std.in."+ todaysDate + "_[FieldName].dat", true, true);
-		ctf.createOutputFixedWidth("C:/Users/david_him/Documents/Projects/ADS/17451/testfiles/testCase.txt", "C:/Users/david_him/Documents/Projects/ADS/17451/testfiles/PROD.CM.DIALER.AUTO.NUANCE.20161026", "C:/Users/david_him/Documents/Projects/ADS/17451/testfiles/config.txt", "PROD.CM.DIALER.AUTO.NUANCE."+ todaysDate + "_[FieldName]", false, false);
-	}
+            for(Iterator br2 = updatedMap.entrySet().iterator(); br2.hasNext(); ++count) {
+                Entry copyString = (Entry)br2.next();
+                String field = (String)copyString.getKey();
+                String value = (String)copyString.getValue();
+                fops1.write(field.getBytes());
+                fops2.write(value.getBytes());
+                if(count < setSize) {
+                    fops1.write(delimiter.getBytes());
+                    fops2.write(delimiter.getBytes());
+                }
+            }
+
+            testCasesLists.clear();
+            BufferedReader var25 = new BufferedReader(new FileReader(tempFile));
+            String var24 = "\n" + var25.readLine();
+            fops1.write(var24.getBytes());
+            fops1.close();
+            fops2.close();
+            var25.close();
+            tempFile.delete();
+        }
+
+        br.close();
+        return testFileList;
+    }
+
+    public String getHeader(String baseLineFile) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(baseLineFile));
+        String header = null;
+
+        String parsedBaseLine;
+        for(int countLine = 0; (parsedBaseLine = br.readLine()) != null; ++countLine) {
+            if(countLine == 0) {
+                header = parsedBaseLine;
+            }
+        }
+
+        br.close();
+        return header;
+    }
+
+    public String getFooter(String baseLineFile, boolean header) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(baseLineFile));
+        String footer = null;
+
+        String parsedBaseLine;
+        for(int countLine = 0; (parsedBaseLine = br.readLine()) != null; ++countLine) {
+            if(countLine == 2 && header) {
+                footer = parsedBaseLine;
+            }
+
+            if(countLine == 1 && !header) {
+                footer = parsedBaseLine;
+            }
+        }
+
+        br.close();
+        return footer;
+    }
+
+    public void setDelimiter(String delimiter) {
+        this.delimiter = delimiter;
+    }
+
+    public String getDelimiter() {
+        return this.delimiter;
+    }
+
+    public static void main(String[] args) throws IOException {
+        CreateTestFiles ctf = new CreateTestFiles();
+        Time time = new Time();
+        String todaysDate = time.getTodaysDate("yyyyMMdd");
+        ctf.createOutputFixedWidth("C:/Users/david_him/Documents/Projects/ADS/17451/testfiles/testCase.txt", "C:/Users/david_him/Documents/Projects/ADS/17451/testfiles/PROD.CM.DIALER.AUTO.NUANCE.20161026", "C:/Users/david_him/Documents/Projects/ADS/17451/testfiles/config.txt", "PROD.CM.DIALER.AUTO.NUANCE." + todaysDate + "_[FieldName]", false, false);
+    }
 }

@@ -2,60 +2,52 @@ package com.psqa.framework;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
-/**
- * Created by david_him on 12/29/2016.
- */
 public class ValidationFactory {
-
     public ValidationFactory() {
-
     }
 
     public boolean validatePETesterInputMapping(HashMap<String, String> mapTestFile, HashMap<String, String> mapJSON) {
         boolean testStatus = false;
-
-        String keyTestFile;
-        String valueTestFile;
         String keyJSON = null;
-        String valueJSON;
-
         int countFail = 0;
+        Iterator var9 = mapTestFile.entrySet().iterator();
 
-        for(Map.Entry<String, String> entry1 : mapTestFile.entrySet()) {
-            keyTestFile = entry1.getKey().toLowerCase().replace("_", "");
-            valueTestFile = entry1.getValue();
+        while(true) {
+            while(var9.hasNext()) {
+                Entry entry1 = (Entry)var9.next();
+                String keyTestFile = ((String)entry1.getKey()).toLowerCase().replace("_", "");
+                String valueTestFile = (String)entry1.getValue();
+                String valueJSON;
+                if(!mapJSON.containsKey(keyTestFile)) {
+                    System.out.println("Did not find a JSON field for: " + keyTestFile);
+                    if(mapJSON.containsValue(valueTestFile)) {
+                        Iterator var11 = mapJSON.entrySet().iterator();
 
-            if(!mapJSON.containsKey(keyTestFile)) {
-                System.out.println("Did not find a JSON field for: " + keyTestFile);
-
-                if (mapJSON.containsValue(valueTestFile)) {
-
-                    for (Map.Entry<String, String> entry2 : mapJSON.entrySet()) {
-                        keyJSON = entry2.getKey();
-                        valueJSON = entry2.getValue();
-
-                        if (valueTestFile.equals(valueJSON)) {
-                            System.out.println("\tBut found the value: " + valueJSON + " correponding to JSON field: " + keyJSON);
+                        while(var11.hasNext()) {
+                            Entry entry2 = (Entry)var11.next();
+                            keyJSON = (String)entry2.getKey();
+                            valueJSON = (String)entry2.getValue();
+                            if(valueTestFile.equals(valueJSON)) {
+                                System.out.println("\tBut found the value: " + valueJSON + " correponding to JSON field: " + keyJSON);
+                            }
                         }
                     }
+
+                    ++countFail;
+                } else {
+                    valueJSON = (String)mapJSON.get(keyTestFile);
+                    System.out.println("Comparing test file field:" + keyTestFile + " \n\t value: " + valueTestFile);
+                    System.out.println("Found JSON value:" + valueJSON);
                 }
-                countFail++;
-
-            } else {
-                valueJSON = mapJSON.get(keyTestFile);
-                System.out.println("Comparing test file field:" + keyTestFile + " \n\t value: " + valueTestFile);
-                System.out.println("Found JSON value:" + valueJSON);
             }
-        }
 
-        if(countFail == 0) {
-            testStatus = true;
-        }
+            if(countFail == 0) {
+                testStatus = true;
+            }
 
-        return testStatus;
+            return testStatus;
+        }
     }
-
 }

@@ -1,84 +1,69 @@
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by Fernflower decompiler)
+//
+
 package com.psqa.framework;
 
-/**
- * Describes a file layout of a fixed-width input file
- * @author David Him
- *
- */
 public class ConfigData {
-	
-	private String fieldName;
-	private String value;
-	private int beginIndex;
-	private int endIndex;
-	private String header;
-	private String footer;
-	
-	/**
-	 * The constructor
-	 * @param fieldName
-	 * @param value
-	 * @param beginIndex
-	 * @param endIndex
-	 */
-	public ConfigData(String fieldName, int beginIndex, int endIndex, String value){
-		this.fieldName = fieldName;
-		this.beginIndex = beginIndex;
-		this.endIndex = endIndex;
-		this.value = value;
-	}
+    private String fieldName;
+    private String value;
+    private int beginIndex;
+    private int endIndex;
+    private String header;
+    private String footer;
 
-	public String getHeader() {
-		return header;
-	}
+    public ConfigData(String fieldName, int beginIndex, int endIndex, String value) {
+        this.fieldName = fieldName;
+        this.beginIndex = beginIndex;
+        this.endIndex = endIndex;
+        this.value = value;
+    }
 
-	public void setHeader(String header) {
-		this.header = header;
-	}
+    public String getHeader() { return this.header;
+    }
 
-	public String getFooter() {
-		return footer;
-	}
+    public void setHeader(String header) {
+        this.header = header;
+    }
 
-	public void setFooter(String footer) {
-		this.footer = footer;
-	}
+    public String getFooter() {
+        return this.footer;
+    }
 
-	/**
-	 * Get the beginning index
-	 * @return
-	 */
-	public int getBeginIndex() {
-		return beginIndex;
-	}
-	
-	/**
-	 * Set the ending index
-	 * @param beginIndex
-	 */
-	public void setBeginIndex(int beginIndex) {
-		this.beginIndex = beginIndex;
-	}
+    public void setFooter(String footer) {
+        this.footer = footer;
+    }
 
-	public int getEndIndex() {
-		return endIndex;
-	}
+    public int getBeginIndex() {
+        return this.beginIndex;
+    }
 
-	public void setEndIndex(int endIndex) {
-		this.endIndex = endIndex;
-	}
+    public void setBeginIndex(int beginIndex) {
+        this.beginIndex = beginIndex;
+    }
 
-	public String getFieldName() {
-		return fieldName;
-	}
+    public int getEndIndex() {
+        return this.endIndex;
+    }
 
-	public void setFieldName(String fieldName) {
-		this.fieldName = fieldName;
-	}
-	public String getValue() {
-		return value;
-	}
-	public void setValue(String value) {
-		this.value = value;
-	}
+    public void setEndIndex(int endIndex) {
+        this.endIndex = endIndex;
+    }
+
+    public String getFieldName() {
+        return this.fieldName;
+    }
+
+    public void setFieldName(String fieldName) {
+        this.fieldName = fieldName;
+    }
+
+    public String getValue() {
+        return this.value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
 }
