@@ -257,14 +257,14 @@ public class CreateTestFiles {
 	 * @param fileNameFormat, the expected file name format.
 	 * @throws IOException
 	 */
-	public File createOutput(String testCaseFilePath, String testDataFilePath, String delimiter, String fileNameFormat, boolean multipleFilesFlag) throws IOException{
+	public ArrayList<String> createOutput(String testCaseFilePath, String testDataFilePath, String delimiter, String fileNameFormat, boolean multipleFilesFlag) throws IOException{
 
 		List<String> testCasesLists = null;
 		File testFile = null;
+		ArrayList<String> testFileList = new ArrayList<>();
 
-		
 		BufferedReader br = new BufferedReader(new FileReader(testCaseFilePath));
-		String content = null;
+		String content;
 		String filePath = testCaseFilePath.substring(0, testCaseFilePath.lastIndexOf("/")) + "/";
 		//File testFile = new File(filePath + fileNameFormat.replace("[FieldName]", "MultipleRecords"));
 
@@ -280,6 +280,8 @@ public class CreateTestFiles {
 			//Set the file name, trim if the total path is > 260 characters.
 			String fileName = filePath + fileNameFormat.replace("[FieldName]", content.replace("\"", ""));
 			fileName = fileName.substring(0, Math.min(fileName.length(), 260));
+
+			testFileList.add(fileName);
 
 			if(multipleFilesFlag == true) {
 				testFile = new File(fileName);
@@ -316,7 +318,7 @@ public class CreateTestFiles {
 			tempFile.delete();
 		}
 		br.close();
-		return testFile;
+		return testFileList;
 	}
 
 	/**
@@ -393,10 +395,10 @@ public class CreateTestFiles {
 		CreateTestFiles ctf = new CreateTestFiles();
 		Time time = new Time();
 		String todaysDate = time.getTodaysDate("yyyyMMdd");
-		ctf.createOutput("C:/Users/david_him/Documents/Projects/BofA/WO15157/testfiles/testCaseMisc.txt",
-				"C:/Users/david_him/Documents/Projects/BofA/WO15157/testfiles/varolii.std.in.20161207.misc.dat",
-				",", "varolii.std.in."+ todaysDate + ".misc.[FieldName].dat", true);
+		/** ctf.createOutput("C:/Users/david_him/Documents/Projects/ADS/17451/testfiles/testCase.txt",
+				"C:/Users/david_him/Documents/Projects/ADS/17451/testfiles/PROD.CM.DIALER.AUTO.NUANCE.20161026",
+				",", "PROD.CM.DIALER.AUTO.NUANCE."+ todaysDate + "[FieldName]", true); **/
 		//ctf.createOutputFixedWidth("C:/Users/david_him/Documents/Projects/ADS/testCase.txt", "C:/Users/david_him/Documents/Projects/ADS/PROD.CM.DIALER.AUTO.NUANCE_header_trailer", "C:/Users/david_him/Documents/Projects/ADS/config.txt", "nuance.std.in."+ todaysDate + "_[FieldName].dat", true, true);
-		//ctf.createOutputFixedWidth("C:/Users/david_him/Documents/Projects/ADS/testCase.txt", "C:/Users/david_him/Documents/Projects/ADS/PROD.CM.DIALER.AUTO.NUANCE.20161026", "C:/Users/david_him/Documents/Projects/ADS/config.txt", "nuance.std.in."+ todaysDate + "_[FieldName].dat", false, false);
+		ctf.createOutputFixedWidth("C:/Users/david_him/Documents/Projects/ADS/17451/testfiles/testCase.txt", "C:/Users/david_him/Documents/Projects/ADS/17451/testfiles/PROD.CM.DIALER.AUTO.NUANCE.20161026", "C:/Users/david_him/Documents/Projects/ADS/17451/testfiles/config.txt", "PROD.CM.DIALER.AUTO.NUANCE."+ todaysDate + "_[FieldName]", false, false);
 	}
 }
