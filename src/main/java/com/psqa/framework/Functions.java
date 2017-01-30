@@ -25,7 +25,7 @@ public class Functions {
     private String PE_TESTER_PASSWORD_VALUE = "Corp@123";
     private String PE_TESTER_LOGIN_BUTTON_LOCATOR = "input[type=\'submit\']";
     private String PE_TESTER_INPUTFILE_LINK_LOCATOR = "a[href=\'/petester/input/\']";
-    private String PE_TESTER_HOST_LOCATOR = "#hostname";
+    //private String PE_TESTER_HOST_LOCATOR = "#hostname";
     private String PE_TESTER_CLIENTID_LOCATOR = "input#clientSysId";
     private String PE_TESTER_SOLUTIONNAME_LOCATOR = "#solutionId";
     private String PE_TESTER_SOLUTIONVERSION_LOCATOR = "#solutionVersionId";
@@ -40,6 +40,12 @@ public class Functions {
     public Functions() {
     }
 
+    /**
+     * Create the WiniumDriver
+     * @param applicationPath, the field path to the application 
+     * @return winiumDriver, the winiumDriver
+     * @throws MalformedURLException
+     */
     public WiniumDriver getWiniumDriver(String applicationPath) throws MalformedURLException {
         DesktopOptions options = new DesktopOptions();
         options.setApplicationPath(applicationPath);
@@ -104,17 +110,17 @@ public class Functions {
         this.findElementByCssSelector(this.PE_TESTER_INPUTFILE_LINK_LOCATOR).click();
         Thread.sleep(5000L);
         this.findElementByCssSelector("option[value=\"" + host + "\"]").click();
-        this.findElementByCssSelector(this.PE_TESTER_CHOOSEFILE_LOCATOR).sendKeys(new CharSequence[]{testFilePath});
+        this.findElementByCssSelector(this.PE_TESTER_CHOOSEFILE_LOCATOR).sendKeys(testFilePath);
         this.findElementByCssSelector(this.PE_TESTER_CLIENTID_LOCATOR).clear();
-        this.findElementByCssSelector(this.PE_TESTER_CLIENTID_LOCATOR).sendKeys(new CharSequence[]{clientId});
+        this.findElementByCssSelector(this.PE_TESTER_CLIENTID_LOCATOR).sendKeys(clientId);
         this.findElementByCssSelector(this.PE_TESTER_SOLUTIONNAME_LOCATOR).clear();
-        this.findElementByCssSelector(this.PE_TESTER_SOLUTIONNAME_LOCATOR).sendKeys(new CharSequence[]{solutionName});
+        this.findElementByCssSelector(this.PE_TESTER_SOLUTIONNAME_LOCATOR).sendKeys(solutionName);
         this.findElementByCssSelector(this.PE_TESTER_SOLUTIONVERSION_LOCATOR).clear();
-        this.findElementByCssSelector(this.PE_TESTER_SOLUTIONVERSION_LOCATOR).sendKeys(new CharSequence[]{version});
+        this.findElementByCssSelector(this.PE_TESTER_SOLUTIONVERSION_LOCATOR).sendKeys(version);
         this.findElementByCssSelector(this.PE_TESTER_FILEMONITORTASK_LOCATOR).clear();
-        this.findElementByCssSelector(this.PE_TESTER_FILEMONITORTASK_LOCATOR).sendKeys(new CharSequence[]{fileMonitorTask});
+        this.findElementByCssSelector(this.PE_TESTER_FILEMONITORTASK_LOCATOR).sendKeys(fileMonitorTask);
         this.findElementByCssSelector(this.PE_TESTER_TIMEOUT_LOCATOR).clear();
-        this.findElementByCssSelector(this.PE_TESTER_TIMEOUT_LOCATOR).sendKeys(new CharSequence[]{timeOut});
+        this.findElementByCssSelector(this.PE_TESTER_TIMEOUT_LOCATOR).sendKeys(timeOut);
         this.findElementByCssSelector(this.PE_TESTER_UPLOADFILE_Button_LOCATOR).click();
         this.findElementByCssSelector(this.PE_TESTER_DROPFILE_BUTTON_LOCATOR).click();
         String inputId = this.trimInputId(this.findElementByXpathSelector(this.PE_TESTER_INPUTID_TEXT_LOCATOR).getText());
@@ -124,7 +130,7 @@ public class Functions {
     }
 
     public void JDBCconnection() {
-        String JDBC_DRIVER = "oracle.jdbc.OracleDriver";
+        //String JDBC_DRIVER = "oracle.jdbc.OracleDriver";
         String DB_URL = "jdbc:oracle:thin:@sst-bch01-vip.vrli.net:1580:bch01";
         String USER = "sst01_ch_appl";
         String PASS = "sst01_ch_appl";
@@ -150,17 +156,17 @@ public class Functions {
             }
 
             rs.close();
-        } catch (SQLException var12) {
+        } catch (SQLException ex) {
             ;
-        } catch (ClassNotFoundException var13) {
-            var13.printStackTrace();
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
         }
 
     }
 
     public String getTrackingID(String inputID) throws InterruptedException {
         String trackingId = null;
-        String JDBC_DRIVER = "oracle.jdbc.OracleDriver";
+        //String JDBC_DRIVER = "oracle.jdbc.OracleDriver";
         String DB_URL = "jdbc:oracle:thin:@sst-bch01-vip.vrli.net:1580:bch01";
         String USER = "sst01_ch_appl";
         String PASS = "sst01_ch_appl";
@@ -174,21 +180,19 @@ public class Functions {
             Statement stmt = conn.createStatement();
             String e = "SELECT TRACKING_ID from RECORD WHERE INPUT_ID=\'" + inputID + "\'";
             System.out.println(e);
-            Thread.sleep(10000L);
+            Thread.sleep(10000);
             ResultSet rs = stmt.executeQuery(e);
 
             while(rs.next()) {
                 trackingId = rs.getString("TRACKING_ID");
                 System.out.println("Tracking ID is: " + trackingId);
             }
-
             rs.close();
-        } catch (SQLException var11) {
+        } catch (SQLException ex) {
             ;
-        } catch (ClassNotFoundException var12) {
-            var12.printStackTrace();
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
         }
-
         return trackingId;
     }
 }

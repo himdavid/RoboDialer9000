@@ -12,11 +12,11 @@ public class ValidationFactory {
         boolean testStatus = false;
         String keyJSON = null;
         int countFail = 0;
-        Iterator var9 = mapTestFile.entrySet().iterator();
+        Iterator iter = mapTestFile.entrySet().iterator();
 
         while(true) {
-            while(var9.hasNext()) {
-                Entry entry1 = (Entry)var9.next();
+            while(iter.hasNext()) {
+                Entry entry1 = (Entry)iter.next();
                 String keyTestFile = ((String)entry1.getKey()).toLowerCase().replace("_", "");
                 String valueTestFile = (String)entry1.getValue();
                 String valueJSON;
@@ -24,7 +24,6 @@ public class ValidationFactory {
                     System.out.println("Did not find a JSON field for: " + keyTestFile);
                     if(mapJSON.containsValue(valueTestFile)) {
                         Iterator var11 = mapJSON.entrySet().iterator();
-
                         while(var11.hasNext()) {
                             Entry entry2 = (Entry)var11.next();
                             keyJSON = (String)entry2.getKey();
@@ -34,7 +33,6 @@ public class ValidationFactory {
                             }
                         }
                     }
-
                     ++countFail;
                 } else {
                     valueJSON = (String)mapJSON.get(keyTestFile);
@@ -42,11 +40,9 @@ public class ValidationFactory {
                     System.out.println("Found JSON value:" + valueJSON);
                 }
             }
-
             if(countFail == 0) {
                 testStatus = true;
             }
-
             return testStatus;
         }
     }
